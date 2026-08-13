@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  hasura:
+    image: hasura/graphql-engine:v2.42.0
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - actions
+    ports:
+      - "8080:8080"
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_DEV_MODE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-dev-admin-secret}
+      # Nhost-style auth: Hasura validates the JWT minted by the web login route
+      # (AUTH_JWT_SECRET below must hold the same key).
+      HASURA_GRAPHQL_JWT_SECRET: ${HASURA_GRAPHQL_JWT_SECRET:-{"type":"HS256","key":"dev-jwt-secret-change-me"}}
+      # Base URL used by the Hasura Actions handler metadata ({{ACTIONS_BASE_URL}}).
+      ACTIONS_BASE_URL: http://actions:4000
+      # Production: point this at your auth webhook which must return the
+      # session variables documented in README.md:
+      # HASURA_GRAPHQL_AUTH_HOOK: http://auth:3000/auth/webhook
+
+  actions:
+    build: ./actions-handler
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    environment:
+      PORT: 4000
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/app
+      # Webhook trigger guard for POST /webhook/trigger.
+      WEBHOOK_TOKEN: ${WEBHOOK_TOKEN:-dev-webhook-token}
+      # Base URL the handler uses to reach itself (for {{env.HANDLER_BASE_URL}}
+      # templates, e.g. the demo http step hitting /demo/status).
+      HANDLER_BASE_URL: http://actions:4000
+      # Optional real LLM backend for the `llm` step; empty -> simulated.
+      USER_LLM_BASE_URL: ${USER_LLM_BASE_URL:-}
+      USER_LLM_API_KEY: ${USER_LLM_API_KEY:-}
+      USER_LLM_MODEL: ${USER_LLM_MODEL:-}
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - hasura
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      # The custom Next server proxies /v1/graphql (HTTP + WebSocket) to this
+      # endpoint and injects the admin secret server-side; the browser never
+      # sees it.
+      HASURA_GRAPHQL_ENDPOINT: http://hasura:8080
+      HASURA_GRAPHQL_ADMIN_SECRET: ${HASURA_GRAPHQL_ADMIN_SECRET:-dev-admin-secret}
+      # Secret used by the login route to sign the session JWT; must match
+      # HASURA_GRAPHQL_JWT_SECRET on the hasura service.
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-dev-jwt-secret-change-me}
+      # Handler for the /webhook proxy (POST /webhook/trigger).
+      ACTIONS_ENDPOINT: http://actions:4000
+      PORT: 3000
+
+volumes:
+  postgres-data:

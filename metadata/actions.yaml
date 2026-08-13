@@ -1,0 +1,29 @@
+actions:
+  - name: approveStep
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/actions/approve-step'
+      forward_client_headers: true
+      timeout: 120
+    permissions:
+      - role: owner
+      - role: editor
+    comment: Approve or reject an awaiting-approval step and resume (or cancel) the run
+  - name: triggerWorkflowRun
+    definition:
+      kind: synchronous
+      handler: '{{ACTIONS_BASE_URL}}/actions/trigger-workflow-run'
+      forward_client_headers: true
+      timeout: 120
+    permissions:
+      - role: owner
+      - role: editor
+    comment: Create and execute a workflow run (role, quota, retry, approval gates)
+custom_types:
+  enums: []
+  input_objects:
+    - name: TriggerWorkflowRunInput
+    - name: ApproveStepInput
+  objects:
+    - name: WorkflowRunOutput
+  scalars: []

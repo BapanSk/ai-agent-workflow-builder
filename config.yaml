@@ -1,0 +1,12 @@
+version: 3
+endpoint: ${HASURA_GRAPHQL_ENDPOINT:-http://localhost:8080}
+admin_secret: ${HASURA_GRAPHQL_ADMIN_SECRET:-dev-admin-secret}
+metadata_directory: metadata
+migrations_directory: migrations
+actions:
+  kind: synchronous
+  # The actions handler. When using the Hasura CLI, `hasura metadata apply`
+  # substitutes {{ACTIONS_BASE_URL}} from the environment; set it to the
+  # actions service (e.g. http://actions:4000 in docker-compose, or
+  # http://localhost:4000 for local dev) so the two Actions resolve.
+  handler_webhook_baseurl: ${ACTIONS_BASE_URL:-http://localhost:4000}

@@ -1,0 +1,52 @@
+table:
+  name: workflow_run_steps
+  schema: public
+object_relationships:
+  - name: approver
+    using:
+      foreign_key_constraint_on: approved_by
+  - name: run
+    using:
+      manual_configuration:
+        column_mapping:
+          organization_id: organization_id
+          run_id: id
+        insertion_order: null
+        remote_table:
+          name: workflow_runs
+          schema: public
+  - name: workflow
+    using:
+      manual_configuration:
+        column_mapping:
+          organization_id: organization_id
+          workflow_id: id
+        insertion_order: null
+        remote_table:
+          name: workflows
+          schema: public
+select_permissions:
+  - role: owner
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: viewer
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: user
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _in: X-Hasura-Allowed-Organizations

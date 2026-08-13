@@ -1,0 +1,72 @@
+table:
+  name: workflow_runs
+  schema: public
+object_relationships:
+  - name: organization
+    using:
+      foreign_key_constraint_on: organization_id
+  - name: triggerer
+    using:
+      foreign_key_constraint_on: triggered_by
+  - name: workflow
+    using:
+      manual_configuration:
+        column_mapping:
+          organization_id: organization_id
+          workflow_id: id
+        insertion_order: null
+        remote_table:
+          name: workflows
+          schema: public
+array_relationships:
+  - name: steps
+    using:
+      manual_configuration:
+        column_mapping:
+          id: run_id
+          organization_id: organization_id
+        insertion_order: null
+        remote_table:
+          name: workflow_run_steps
+          schema: public
+select_permissions:
+  - role: owner
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      allow_aggregations: true
+  - role: editor
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      allow_aggregations: true
+  - role: viewer
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _in: X-Hasura-Allowed-Organizations
+      allow_aggregations: true
+update_permissions:
+  - role: owner
+    permission:
+      columns:
+        - status
+        - error
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id

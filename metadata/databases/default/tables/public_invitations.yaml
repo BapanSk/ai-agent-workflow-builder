@@ -1,0 +1,55 @@
+table:
+  name: invitations
+  schema: public
+object_relationships:
+  - name: inviter
+    using:
+      foreign_key_constraint_on: invited_by
+  - name: organization
+    using:
+      foreign_key_constraint_on: organization_id
+insert_permissions:
+  - role: owner
+    permission:
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      set:
+        invited_by: X-Hasura-User-Id
+        organization_id: X-Hasura-Organization-Id
+      columns:
+        - email
+        - role
+        - token
+        - expires_at
+select_permissions:
+  - role: owner
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+update_permissions:
+  - role: owner
+    permission:
+      columns:
+        - status
+        - accepted_at
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+delete_permissions:
+  - role: owner
+    permission:
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id

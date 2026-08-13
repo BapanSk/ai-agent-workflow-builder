@@ -1,0 +1,17 @@
+- name: scheduled_ai_release
+  webhook: '{{ACTIONS_BASE_URL}}/webhook/trigger'
+  schedule: '0 * * * *'
+  include_in_metadata: true
+  payload:
+    organization: org-a
+    workflow: AI Release
+    input:
+      risk: low
+      scheduled: true
+  headers:
+    - name: x-webhook-token
+      value_from_env: WEBHOOK_TOKEN
+  retry_conf:
+    num_retries: 3
+    retry_interval_seconds: 10
+    timeout_seconds: 60

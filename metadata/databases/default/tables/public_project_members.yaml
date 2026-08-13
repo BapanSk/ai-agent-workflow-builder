@@ -1,0 +1,136 @@
+table:
+  name: project_members
+  schema: public
+object_relationships:
+  - name: project
+    using:
+      manual_configuration:
+        column_mapping:
+          organization_id: organization_id
+          project_id: id
+        insertion_order: null
+        remote_table:
+          name: projects
+          schema: public
+  - name: user
+    using:
+      foreign_key_constraint_on: user_id
+insert_permissions:
+  - role: owner
+    permission:
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      set:
+        organization_id: X-Hasura-Organization-Id
+      columns:
+        - project_id
+        - user_id
+        - role
+  - role: editor
+    permission:
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+        project:
+          members:
+            user_id:
+              _eq: X-Hasura-User-Id
+            role:
+              _eq: owner
+      set:
+        organization_id: X-Hasura-Organization-Id
+      columns:
+        - project_id
+        - user_id
+        - role
+select_permissions:
+  - role: owner
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+        _or:
+          - user_id:
+              _eq: X-Hasura-User-Id
+          - project:
+              members:
+                user_id:
+                  _eq: X-Hasura-User-Id
+  - role: viewer
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+        _or:
+          - user_id:
+              _eq: X-Hasura-User-Id
+          - project:
+              members:
+                user_id:
+                  _eq: X-Hasura-User-Id
+  - role: user
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _in: X-Hasura-Allowed-Organizations
+        _or:
+          - user_id:
+              _eq: X-Hasura-User-Id
+          - project:
+              members:
+                user_id:
+                  _eq: X-Hasura-User-Id
+update_permissions:
+  - role: owner
+    permission:
+      columns:
+        - role
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      columns:
+        - role
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+        project:
+          members:
+            user_id:
+              _eq: X-Hasura-User-Id
+            role:
+              _eq: owner
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+delete_permissions:
+  - role: owner
+    permission:
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+        project:
+          members:
+            user_id:
+              _eq: X-Hasura-User-Id
+            role:
+              _eq: owner

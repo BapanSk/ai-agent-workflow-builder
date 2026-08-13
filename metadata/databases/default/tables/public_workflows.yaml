@@ -1,0 +1,106 @@
+table:
+  name: workflows
+  schema: public
+object_relationships:
+  - name: creator
+    using:
+      foreign_key_constraint_on: created_by
+  - name: organization
+    using:
+      foreign_key_constraint_on: organization_id
+array_relationships:
+  - name: runs
+    using:
+      manual_configuration:
+        column_mapping:
+          id: workflow_id
+          organization_id: organization_id
+        insertion_order: null
+        remote_table:
+          name: workflow_runs
+          schema: public
+insert_permissions:
+  - role: owner
+    permission:
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      set:
+        created_by: X-Hasura-User-Id
+        organization_id: X-Hasura-Organization-Id
+      columns:
+        - name
+        - description
+        - steps
+        - is_active
+  - role: editor
+    permission:
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      set:
+        created_by: X-Hasura-User-Id
+        organization_id: X-Hasura-Organization-Id
+      columns:
+        - name
+        - description
+        - steps
+        - is_active
+select_permissions:
+  - role: owner
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: viewer
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: user
+    permission:
+      columns: '*'
+      filter:
+        organization_id:
+          _in: X-Hasura-Allowed-Organizations
+update_permissions:
+  - role: owner
+    permission:
+      columns:
+        - name
+        - description
+        - steps
+        - is_active
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      columns:
+        - name
+        - description
+        - steps
+        - is_active
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+      check:
+        organization_id:
+          _eq: X-Hasura-Organization-Id
+delete_permissions:
+  - role: owner
+    permission:
+      filter:
+        organization_id:
+          _eq: X-Hasura-Organization-Id

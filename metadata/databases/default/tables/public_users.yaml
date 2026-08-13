@@ -1,0 +1,65 @@
+table:
+  name: users
+  schema: public
+array_relationships:
+  - name: assigned_tasks
+    using:
+      foreign_key_constraint_on:
+        column: assignee_id
+        table:
+          name: tasks
+          schema: public
+  - name: created_projects
+    using:
+      foreign_key_constraint_on:
+        column: created_by
+        table:
+          name: projects
+          schema: public
+  - name: memberships
+    using:
+      foreign_key_constraint_on:
+        column: user_id
+        table:
+          name: organization_members
+          schema: public
+select_permissions:
+  - role: owner
+    permission:
+      columns:
+        - id
+        - name
+        - avatar_url
+        - last_seen_at
+      filter:
+        memberships:
+          organization_id:
+            _eq: X-Hasura-Organization-Id
+  - role: editor
+    permission:
+      columns:
+        - id
+        - name
+        - avatar_url
+        - last_seen_at
+      filter:
+        memberships:
+          organization_id:
+            _eq: X-Hasura-Organization-Id
+  - role: viewer
+    permission:
+      columns:
+        - id
+        - name
+        - avatar_url
+        - last_seen_at
+      filter:
+        memberships:
+          organization_id:
+            _eq: X-Hasura-Organization-Id
+  - role: user
+    permission:
+      columns: '*'
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
